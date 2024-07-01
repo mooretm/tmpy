@@ -1,33 +1,41 @@
 """ Classes to write data to various file types. 
 
-    Author: Travis M. Moore
-    Created: March 07, 2024
-    Last edited: April 23, 2024
+Author: Travis M. Moore
+Created: March 07, 2024
+Last edited: June 25, 2024
 """
 
-############
-# IMPORTS  #
-############
-# GUI
+###########
+# IMPORTS #
+###########
+# Standard library
+import csv
+import logging
+import os
+from pathlib import Path
 from tkinter import filedialog
 
-# System
-import csv
-from pathlib import Path
-import os
-import logging
-
+##########
+# Logger #
+##########
+# Create new logger
 logger = logging.getLogger(__name__)
 
-
-######################
-# Generic File Class #
-######################
+###############
+# FileHandler #
+###############
 class FileHandler:
     """ Generic file class to be inherited by specific file type classes. """
+
     def __init__(self, filepath, data, **kwargs):
-        """ :params: filepath: full path of CSV file with extension
-            :kwargs: file_browser: 
+        """ Initialize a generic FileHandler instance (to be inherited).
+
+        :param filepath: Full path of file with extension
+        :type filepath: string
+        :param file_browser: A kwarg that can prompt a file browser on save
+        :type file_browser: bool
+        :return: Writes provided data to file.
+        :rtype: Write to file, or None
         """
         # Test for valid file extension
         if not filepath.endswith(self.ext):
@@ -48,7 +56,6 @@ class FileHandler:
         # Call save function
         self.save(data)
 
-
     def _get_directory_from_browser(self):
         """ Get save directory from consumer via file dialog. """
         try:
@@ -60,10 +67,9 @@ class FileHandler:
         self.filepath = os.path.join(self.dirname, self.filename)
         self.filepath = Path(self.filepath)
 
-
     def _check_for_data_folder(self):
         """ Check for existing directory. Create specified directory if
-            it doesn't currently exist.
+        it doesn't currently exist.
         """
         # Does directory already exist?
         data_dir_exists = os.access(self.dirname, os.F_OK)
@@ -86,7 +92,6 @@ class FileHandler:
         else:
             logger.info('Found data directory "%s"', self.dirname)
 
-
     def _check_write_access(self):
         """ Check for write access to store CSV. """
         # Convert filepath to Path object for testing
@@ -103,12 +108,10 @@ class FileHandler:
             msg = f"Permission denied accessing file: {self.filename}"
             logger.critical(msg)
             raise PermissionError(msg)
-        
-    
+
     def _write(self, data):
         """ To be overridden by specific file classes. """
         pass
-
 
     def save(self, data):
         """ Save a dictionary of data to .csv file. """
@@ -124,10 +127,9 @@ class FileHandler:
         # Write data to file
         self._write(data)
 
-
-##############################
-# Specific File Type Classes #
-##############################
+###########
+# CSVFile #
+###########
 class CSVFile(FileHandler):
     """ Specific file type: CSV. """
     # Extension checked by FileHandler
@@ -135,11 +137,10 @@ class CSVFile(FileHandler):
 
     def _write(self, data):
         """ Write dict data to CSV. Subsequent calls append to file.
-            Includes header for new files.
+        Includes header for new files.
         """
         # Write file
         logger.info('Attempting to update: %s', self.filename)
-        
         try:
             newfile = not self.filepath.exists()
             with open(self.filepath, 'a', newline='') as fh:
@@ -151,6 +152,8 @@ class CSVFile(FileHandler):
         except AttributeError as e:
             logger.critical('%s', e)
 
-
+################
+# Module Guard #
+################
 if __name__ == "__main__":
     pass

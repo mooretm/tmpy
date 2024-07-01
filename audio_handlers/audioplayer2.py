@@ -3,7 +3,7 @@
     Accepted audio types: WAV files and numpy arrays.
 
     Written by: Travis M. Moore
-    Last edited: June 14, 2024
+    Last edited: April 30, 2024
 """
 
 ###########
@@ -25,15 +25,13 @@ rcParams.update({'figure.autolayout': True})
 # Custom
 from ..audio_handlers import audio_exceptions
 
-##########
-# Logger #
-##########
-# Create custom logger
+
+#########
+# BEGIN #
+#########
+# Logger
 logger = logging.getLogger(__name__)
 
-###############
-# AudioPlayer #
-###############
 class AudioPlayer:
     """ Import and play back WAV or numpy array. """
 
@@ -43,8 +41,7 @@ class AudioPlayer:
             kwargs: must provide a sampling rate when passing an array
         """
         logger.info("Initializing AudioPlayer")
-
-        # Assign attributes
+        # Assign public attributes
         self.audio = audio
         
         # If AUDIO argument is a Path, import .wav file;
@@ -60,10 +57,13 @@ class AudioPlayer:
             try:
                 self.fs = kwargs['sampling_rate']
             except: 
+                #print("audiomodel: A sampling rate must be provided " +
+                #      "with numpy array signals!")
                 logger.exception("Please provide a sampling rate " \
                                "for numpy array signals!")
                 raise audio_exceptions.MissingSamplingRate()
         else:
+            #print("audiomodel: Unrecognized audio type")
             logger.exception("Unrecognized audio type!")
             raise audio_exceptions.InvalidAudioType(type(self.audio))
 
@@ -72,7 +72,8 @@ class AudioPlayer:
 
 
     def _import_wav_file(self):
-        logger.info("Attempting to load %s", os.path.basename(self.audio))
+        #print(f"audiomodel: Loading {os.path.basename(self.audio)}...")
+        logger.debug("Attempting to load %s", os.path.basename(self.audio))
 
         # Parse file path
         self.directory = os.path.split(self.audio)[0]
@@ -81,11 +82,13 @@ class AudioPlayer:
         # Read audio file
         file_exists = os.access(self.audio, os.F_OK)
         if not file_exists:
+            #print("audiomodel: Audio file not found!")
             logger.exception("Audio file not found!")
             raise FileNotFoundError
         else:
             self.signal, self.fs = sf.read(self.audio)
-            logger.info("Sampling rate: %d", self.fs)
+            #print(f"audiomodel: Sampling rate: {self.fs}")
+            logger.debug("Sampling rate: %d", self.fs)
 
 
     def _get_audio_details(self):
@@ -95,23 +98,28 @@ class AudioPlayer:
         except IndexError:
             self.num_channels = 1
         self.channels = np.array(range(1, self.num_channels+1))
-        logger.info("Channels in signal: %d", self.num_channels)
+        #print(f"audiomodel: Number of channels in signal: {self.num_channels}")
+        logger.debug("Channels in signal: %d", self.num_channels)
 
         # Assign audio file attributes
         self.dur = len(self.signal) / self.fs
         self.t = np.arange(0, self.dur, 1/self.fs)
+        #print(f"audiomodel: Duration: {np.round(self.dur, 2)} seconds " +
+        #    f"({np.round(self.dur/60, 2)} minutes)")
         secs = np.round(self.dur, 2)
         mins = np.round(self.dur/60, 2)
-        logger.info("Duration: %.1f seconds (%.1f minutes)", secs, mins) 
+        logger.debug("Duration: %.1f seconds (%.1f minutes)", secs, mins) 
 
         # Get data type
         self.data_type = self.signal.dtype
-        logger.info("Data type: %s", str(self.data_type))
+        #print(f"audiomodel: Data type: {self.data_type}")
+        logger.debug("Data type: %s", str(self.data_type))
+        #print("audiomodel: Done")
 
 
     def stop(self):
         """ Stop audio presentation. """
-        logger.info("Stop called")
+        logger.debug("Stop called")
         sd.stop()
 
 
@@ -119,28 +127,32 @@ class AudioPlayer:
         """ Assign device id. Truncate audio/routing, if necessary,
             based on number of audio device channels. Set level.
         """
-        logger.info("Preparing for playback")
-
         # Initialization
         self.level = level
         self.device_id = device_id
         self.routing = routing
 
+        #print("\naudiomodel: Preparing for playback...")
+        logger.debug("Preparing for playback")
+
         # Create a temporary audio file to modify
         self.temp = self.signal.copy()
         self.temp = self.temp.astype(np.float32)
-        logger.info("Data type converted to %s", str(self.temp.dtype))
+        #print(f"audiomodel: Data type converted to {self.temp.dtype}")
+        logger.debug("Data type converted to %s", str(self.temp.dtype))
 
         # Assign default sounddevice settings
         try:
             self._set_defaults()
         except sd.PortAudioError:
-            logger.error("Invalid audio device!")
+            #print("audiomodel: Invalid audio device!")
+            logger.exception("Invalid audio device!")
             raise audio_exceptions.InvalidAudioDevice(self.device_id)
 
         # Check channel routing
         if (self.num_channels != len(self.routing)) or (not self.routing):
-            logger.error("Invalid channel routing!")
+            #print("audiomodel: Invalid channel routing!")
+            logger.exception("Invalid channel routing!")
             raise audio_exceptions.InvalidRouting(
                 self.num_channels, self.routing)
 
@@ -151,6 +163,7 @@ class AudioPlayer:
         try:
             self._check_clipping()
         except audio_exceptions.Clipping:
+            #print("audiomodel: Level caused clipping!")
             logger.error("Presentation level caused clipping!")
             raise
 
@@ -159,6 +172,7 @@ class AudioPlayer:
         self._check_channels_and_routing()
 
         # Present audio
+        #print("audiomodel: Attempting to present audio")
         logger.info("Attempting to present audio")
         sd.play(self.temp, mapping=self.routing)
         logger.info("Successful")
@@ -173,14 +187,16 @@ class AudioPlayer:
         try:
             sd.default.device = self.device_id
             device_name = sd.query_devices(sd.default.device)['name']
-            logger.info("Audio device: %s", device_name)
+            logger.debug("Audio device: %s", device_name)
+            #print(f"audiomodel: Audio device: " + 
+            #  f"{sd.query_devices(sd.default.device)['name']}")
         except sd.PortAudioError:
             raise
         
         # Get number of available audio device channels
-        self.num_outputs = sd.query_devices(
-            sd.default.device)['max_output_channels']
-        logger.info("Device outputs: %d", self.num_outputs)
+        self.num_outputs = sd.query_devices(sd.default.device)['max_output_channels']
+        #print(f"audiomodel: Device outputs: {self.num_outputs}")
+        logger.debug("Device outputs: %d", self.num_outputs)
 
         # Assign audio device sampling rate based on 
         # provided audio sampling rate
@@ -190,6 +206,10 @@ class AudioPlayer:
     def _check_channels_and_routing(self):
         # Check that audio device has enough channels for audio
         if self.num_outputs < self.num_channels:
+            # print(f"\naudiomodel: {self.num_channels}-channel file, but "
+            #     f"only {self.num_outputs} audio device output channels!")
+            # print("audiomodel: Dropping " +
+            #     f"{self.num_channels - self.num_outputs} audio file channels")
             logger.warning("%d-channel file, but only %d audio device " \
                            "channels!", self.num_channels, self.num_outputs)
             dropped = self.num_channels - self.num_outputs
@@ -199,14 +219,17 @@ class AudioPlayer:
             # match number of available audio device outputs
             self.temp = self.temp[:, 0:self.num_outputs]
             self.routing = self.routing[:self.temp.shape[1]]
-        logger.info("Audio shape: %s", self.temp.shape)
+        
+        #print(f"audiomodel: Audio shape: {self.temp.shape}")
+        logger.debug("Audio shape: %s", self.temp.shape)
 
 
     def _set_level(self):  
         """ Set presentation level and check for clipping. """
         if self.level == None:
             # Normalize if no level is provided
-            logger.warning("No level provided; normalizing to +/-1")
+            #print("audiomodel: No level provided; normalizing to +/-1")
+            logger.debug("No level provided; normalizing to +/-1")
             if self.num_channels > 1:
                 for chan in range(0, self.num_channels):
                     # Remove DC offset
@@ -225,8 +248,10 @@ class AudioPlayer:
         else:
             # Convert level in dB to magnitude
             mag = self.db2mag(self.level)
-            logger.info("Adjusted level (dB): %f", self.level)
-            logger.info("Multiplying signal by: %f", mag)
+            #print(f"audiomodel: Adjusted Level (dB): {self.level}")
+            #print(f"audiomodel: Multiplying signal by: {np.round(mag,2)}")
+            logger.debug("Adjusted level (dB): %f", self.level)
+            logger.debug("Multiplying signal by: %f", mag)
             # Apply scaling factor to self.temp
             self.temp = self.temp * mag
 
@@ -236,13 +261,11 @@ class AudioPlayer:
         if np.max(np.abs(self.temp)) > 1:
             # Raise exception to prevent playback
             #self.plot_waveform()
-            logger.error("Clipping has occurred!")
             raise audio_exceptions.Clipping
 
 
     def plot_waveform(self, title=None):
         """ Plot all channels overlaid. """
-        logger.info("Creating waveform plot")
         # Create time base
         dur = len(self.temp) / self.fs
         t = np.arange(0, dur, 1/self.fs)
@@ -261,7 +284,7 @@ class AudioPlayer:
     ###########################
     def db2mag(self, db):
         """ Convert decibels to magnitude. Takes a single
-        value or a list of values.
+            value or a list of values.
         """
         # Must use this form to handle negative db values!
         try:
@@ -273,8 +296,9 @@ class AudioPlayer:
 
 
     def mag2db(self, mag):
-        """Convert magnitude to decibels. Takes a single
-        value or a list of values.
+        """ 
+            Convert magnitude to decibels. Takes a single
+            value or a list of values.
         """
         try:
             db = [20 * np.log10(x) for x in mag]
@@ -285,38 +309,44 @@ class AudioPlayer:
 
 
     def rms(self, sig):
-        """ Calculate the root mean square of a signal. 
+        """ 
+            Calculate the root mean square of a signal. 
             
-        NOTE: np.square will return invalid, negative 
-            results if the number excedes the bit 
-            depth. In these cases, convert to int64
-            EXAMPLE: sig = np.array(sig,dtype=int)
+            NOTE: np.square will return invalid, negative 
+                results if the number excedes the bit 
+                depth. In these cases, convert to int64
+                EXAMPLE: sig = np.array(sig,dtype=int)
 
-        Written by: Travis M. Moore
-        Last edited: Feb. 3, 2020
+            Written by: Travis M. Moore
+            Last edited: Feb. 3, 2020
         """
         theRMS = np.sqrt(np.mean(np.square(sig)))
         return theRMS
 
 
     def setRMS(self, sig, amp, eq='n'):
-        """Set RMS level of a 1-channel or 2-channel signal.
+        """
+            Set RMS level of a 1-channel or 2-channel signal.
         
-        SIG: a 1-channel or 2-channel signal
-        AMP: the desired amplitude to be applied to 
-            each channel. Note this will be the RMS 
-            per channel, not the total of both channels.
-        EQ: takes 'y' or 'n'. Whether or not to equalize 
-            the levels in a 2-channel signal. For example, 
-            a signal with an ILD would lose the ILD with 
-            EQ='y', so the default in 'n'.
+            SIG: a 1-channel or 2-channel signal
+            AMP: the desired amplitude to be applied to 
+                each channel. Note this will be the RMS 
+                per channel, not the total of both channels.
+            EQ: takes 'y' or 'n'. Whether or not to equalize 
+                the levels in a 2-channel signal. For example, 
+                a signal with an ILD would lose the ILD with 
+                EQ='y', so the default in 'n'.
 
-        EXAMPLE: 
-        Create a 2 channel signal
-        [t, tone1] = mkTone(200,0.1,30,48000)
-        [t, tone2] = mkTone(100,0.1,0,48000)
-        combo = np.array([tone1, tone2])
-        adjusted = setRMS(combo,-15)
+            EXAMPLE: 
+            Create a 2 channel signal
+            [t, tone1] = mkTone(200,0.1,30,48000)
+            [t, tone2] = mkTone(100,0.1,0,48000)
+            combo = np.array([tone1, tone2])
+            adjusted = setRMS(combo,-15)
+
+            Written by: Travis M. Moore
+            Created: Jan. 10, 2022
+            Last edited: May 17, 2022
         """
         if len(sig.shape) == 1:
             rmsdb = self.mag2db(self.rms(sig))

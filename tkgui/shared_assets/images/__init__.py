@@ -25,6 +25,8 @@ LOGO_FULL_ICO = IMAGE_DIRECTORY / 'logo_icons' / 'logo_full.ico'
 SETTINGS_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'gear-wide-connected.png'
 PLAY_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'play-fill.png'
 QUIT_ICON = IMAGE_DIRECTORY / 'x-circle.png'
+UPLOAD_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'upload.png'
+DOWNLOAD_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'download.png'
 
 # Tools menu
 AUDIO_ICON = IMAGE_DIRECTORY / 'menu_icons' /  'speaker.png'
@@ -36,5 +38,6 @@ HELP_ICON = IMAGE_DIRECTORY / 'menu_icons' /  'file-earmark-text.png'
 CHANGELOG_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'list-task.png'
 
 # Misc
-SEARCH_ICON = IMAGE_DIRECTORY / 'search.png'
-SUBMIT_ICON = IMAGE_DIRECTORY / 'check-circle.png'
+SEARCH_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'search.png'
+SUBMIT_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'check-circle.png'
+CALCULATOR_ICON = IMAGE_DIRECTORY / 'menu_icons' / 'calculator.png'

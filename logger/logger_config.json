@@ -5,6 +5,9 @@
         "simple": {
             "format": "%(module)s (%(lineno)s): %(message)s"
         },
+        "simple2": {
+            "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(message)s"
+        },
         "detailed": {
             "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s: %(message)s",
             "datefmt": "%Y-%m-%dT%H:%M:%S%z"
@@ -40,7 +43,7 @@
         },
         "stdout": {
             "class": "logging.StreamHandler",
-            "formatter": "simple",
+            "formatter": "simple2",
             "stream": "ext://sys.stdout"
         }
     },
@@ -48,7 +51,6 @@
         "root": {
             "level": "DEBUG",
             "handlers": [
-                "stderr",
                 "stdout",
                 "file"
             ]

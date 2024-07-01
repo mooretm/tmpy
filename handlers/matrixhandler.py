@@ -1,4 +1,8 @@
-""" Class for importing matrix files and organizing trials. """
+""" Class for importing matrix files and organizing trials. 
+
+Written by: Travis M. Moore
+Last edited: July 1, 2024
+"""
 
 ###########
 # Imports #
@@ -19,29 +23,29 @@ logger = logging.getLogger(__name__)
 # MatrixHandler #
 #################
 class MatrixHandler:
-    def __init__(self, filepath, repetitions, randomize):
+    def __init__(self, filepath, repetitions, randomize, **kwargs):
         logger.debug("Initializing MatrixHandler")
         
         # Assign attributes
         self.filepath = filepath
-        self.randomize = randomize
         if not repetitions:
             self.repetitions = 1
         else:
             self.repetitions = repetitions
+        self.randomize = randomize
+        self.kwargs = kwargs
 
-        #####################
-        # Sequence of Funcs #
-        #####################
-        # Import matrix file
-        self._load_matrix()
-
-        # Make trial repetitions
-        self._do_reps()
-
-        # If specified, randomize trials
-        if self.randomize == 1:
-            self._randomize()
+        # If a file path was provided, import the matrix file
+        if filepath:
+            # Import matrix file
+            self._load_matrix()
+            # Make trial repetitions
+            self._do_reps()
+            # If specified, randomize trials
+            if self.randomize == 1:
+                self._randomize()
+        else:
+            raise ValueError
 
     def _load_matrix(self):
         """ Import matrix file specified in settings. """
@@ -52,7 +56,6 @@ class MatrixHandler:
         except FileNotFoundError as e:
             logger.error("File not found!")
             raise
-
 
     def _do_reps(self):
         """ Repeat trials the specified number of times. """
@@ -72,7 +75,6 @@ class MatrixHandler:
             ignore_index=True
         )
 
-
     def _randomize(self):
         """ Randomize trials in self.matrix. """
         logger.info('Randomizing trials')
@@ -89,7 +91,6 @@ class MatrixHandler:
         # Reset index
         self.matrix.reset_index(drop=True, inplace=True)
 
-
     # def _add_full_audio_paths(self):
     #     """ Add the audio dir from settings to audio file 
     #         names from matrix file.
@@ -104,6 +105,8 @@ class MatrixHandler:
     #         # Update name in _matrix_file df
     #         self._matrix_file.iloc[row,0] = full_path
 
-
+################
+# Module Guard #
+################
 if __name__ == '__main__':
     pass

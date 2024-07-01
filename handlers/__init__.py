@@ -40,11 +40,21 @@ __all__ += [
 ]
 
 
-# Trials Matrix #
+# Matrix handler #
 from .matrixhandler import (
     MatrixHandler
 )
 
 __all__ += [
     'MatrixHandler'
+]
+
+
+# Matrix file #
+from .matrixfile import (
+    MatrixFile
+)
+
+__all__ += [
+    'MatrixFile'
 ]

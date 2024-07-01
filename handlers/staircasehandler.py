@@ -3,7 +3,7 @@
     Written by: Travis M. Moore
     Modeled after StairHandler from PsychoPy
     Created: June 06, 2023
-    Last edited: December 21, 2023
+    Last edited: May 24, 2024
 """
 
 ###########
@@ -56,7 +56,7 @@ class StaircaseHandler:
             msg = f"The number of reversals must be equal to or greater "\
                 f"than the number of step sizes.\nFound {len(step_sizes)} "\
                 f"step sizes, but {nReversals} reversal(s)."
-            print(msg)
+            logger.error(msg)
             raise ValueError(msg)
 
         # Additional attributes
@@ -88,7 +88,7 @@ class StaircaseHandler:
 
 
     def _handle_response(self, response):
-        """ Score and log response and level tracker."""
+        """ Score and log response and level tracker. """
         logger.debug("Scoring response")
         # Score response
         if response == 1:
@@ -104,11 +104,11 @@ class StaircaseHandler:
             self._level_tracker.append(-1)
             logger.info("Incorrect")
         else:
-            logger.critical("Invalid response!")
+            logger.error("Invalid response!")
 
 
     def _calc_reversals(self):
-        """ Determine whether a reversal has occurred."""
+        """ Determine whether a reversal has occurred. """
         logger.debug("Calculating reversals")
         # Create variables
         correct_vals = np.ones(self.nDown)
@@ -163,7 +163,7 @@ class StaircaseHandler:
 
 
     def _increase_trial_num(self):
-        """ Increase the trial counter by 1."""
+        """ Increase the trial counter by 1. """
         logger.debug("Increasing trial counter")
         self._trial_num += 1
 
@@ -314,22 +314,26 @@ class DataPoint:
 
 
 class DataWrangler:
-    """ Represent a collection of data points that can be searched."""
+    """ Represent a collection of data points that can be searched. """
     def __init__(self):
-        """Initialize a DataWrangler with an empty list."""
-        logger.debug("I")
+        """Initialize a DataWrangler with an empty list. """
+        logger.debug("Initializing DataWrangler")
         self.datapoints = []
 
 
     def new_data_point(self):
-        """ Create new DataPoint object and append to list."""
+        """ Create new DataPoint object and append to list. """
+        logger.debug("Creating new DataPoint")
         dp = DataPoint()
         self.datapoints.append(dp)
         return dp
 
 
     def _get_correct(self):
-        """ Return a list of all DataPoint objects with a correct response."""
+        """ Return a list of all DataPoint objects with a correct 
+            response. 
+        """
+        logger.debug("Getting all DataPoints with correct responses")
         return [datum for datum in self.datapoints if datum.response == 1]
 
 
@@ -337,9 +341,11 @@ class DataWrangler:
         """ Return a list of all DataPoint objects with an incorrect 
             response.
         """
+        logger.debug("Getting all DataPoints with incorrect responses")
         return [datum for datum in self.datapoints if datum.response == -1]
 
 
     def _get_reversals(self):
-        """ Find all data points that match the given filter."""
+        """ Return list of DataPoints containing reversals. """
+        logger.debug("Getting all DataPoints containing reversals")
         return [datum for datum in self.datapoints if datum.reversal]

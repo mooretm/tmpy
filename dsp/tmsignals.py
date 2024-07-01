@@ -35,6 +35,26 @@ def addSynth(F0, harm, amp, phi, dur, fs = 48000):
     return [t, sig]
 
 
+def calc_RMS_based_on_sources(desired_SPL, num_sources):
+    """ Calculate the SPL needed per channel to sum to the
+        desired SPL.
+    """
+    # Convert SPL to intensity
+    power_single = 10**(desired_SPL/10)
+    # Calculate total intensity
+    power_total = power_single * num_sources
+    # Find the difference between the total power and a single channel
+    diff_power = power_total - power_single
+    # Calculate a correction factor by dividing the diff by the number of channels
+    cf_power = diff_power / num_sources
+    # Calculate the new power for a single channel
+    new_power_single = power_single - cf_power
+    # Convert single channel power to SPL
+    new_spl_level = 10 * np.log10(new_power_single)
+    
+    return new_spl_level
+
+
 def db2mag(db):
     """ 
         Convert decibels to magnitude. Takes a single
@@ -522,25 +542,25 @@ def mkTone(freq, dur, phi=0, fs=48000):
     return [t, sig]
 
 
-def warble_tone(fc, mod_depth, mod_rate, dur, fs=48000):
+def warble_tone(dur, fs, fc, phi, mod_rate, mod_depth):
     """ Generate a warble tone. Optionally, play the tone using the 
         sounddevice library, and display spectrogram and power 
         spectral density plots for inspection.
 
         Parameters:
-        - fc (float): Carrier frequency of the tone in Hertz.
-        - mod_depth (float): Modulation depth of the tone in percent.
-        - mod_rate (float): Modulation rate of the tone in Hertz.
-        - dur (float): Duration of the tone in seconds.
-        - fs (int): Sampling rate in samples per second. 
+            dur: duration in seconds
+            fs: sampling rate in Hz
+            fc: center frequency of the warble tone
+            phi: starting phase in radians
+            mod_rate: modulation rate in percent
+            mod_depth: modulation depth in percent
 
         Returns:
-        y: a warble tone
+        y: a single-channel warble tone
 
-        This function generates a warble tone based on the specified parameters.
-        
+        Example:
+            warble = _warble_tone(3, 44100, 1000, 0, 5, 5)
     """
-
     #########################
     # Warble tone synthesis #
     #########################
@@ -551,7 +571,8 @@ def warble_tone(fc, mod_depth, mod_rate, dur, fs=48000):
     wc = fc * 2 * np.pi
     wd = mod_rate * 2 * np.pi
     B = (mod_depth / 100) * wc # in radians
-    y = np.sin(wc * t + (B/wd) * (np.sin(wd * t - (np.pi/2)) + 1))
+    #y = np.sin(wc * t + (B/wd) * (np.sin(wd * t - (np.pi/2)) + 1)) # static phi
+    y = np.sin(wc * t + (B/wd) * (np.sin(wd * t - phi) + 1))
 
 
     ##########################

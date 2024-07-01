@@ -53,9 +53,13 @@ class AdaptiveTrialHandler:
         elif num_steps < self.total_trials:
             reps = [self.step_sizes[-1]] * (self.total_trials - num_steps)
             self.step_sizes += reps
-        elif num_steps < self.total_trials:
-            raise ValueError
+        # elif num_steps < self.total_trials:
+        #     raise ValueError
 
+        # Pad with empty initial step size to offset first
+        # "next()" call with None
+        self.step_sizes.insert(0, None)
+        
 
     def _adjust_paramter(self, response):
         """ Increase/decrease paramter based on response. """

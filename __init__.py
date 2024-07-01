@@ -24,11 +24,15 @@ __all__ += [
 
 # Functions #
 from .functions import (
-    helper_funcs
+    helper_funcs,
+    tkgui_funcs,
+    logging_funcs
 )
 
 __all__ += [
-    'helper_funcs'
+    'helper_funcs',
+    'tkgui_funcs',
+    'logging_funcs'
 ]
 
 

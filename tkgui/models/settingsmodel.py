@@ -7,7 +7,6 @@
 import os
 import json
 import logging
-import sys
 from pathlib import Path
 
 # Custom
@@ -60,13 +59,11 @@ class SettingsModel:
         if not self.filepath.exists():
             logger.debug("No settings file found; " +
                   "using default values")
-            # Save values to config.json
-            # Requires some delay to allow setup to finish
-            self.parent.after(
-                1000, 
-                lambda: self.parent.event_generate('<<SettingsSubmit>>')
-            )
-            logger.debug("Saved default settings after 1 s delay")
+            """ If a config file hasn't been created yet, no need to 
+                do anything. The controller creates the settings 
+                dictionary - this model just needs to hold the JSON-
+                formatted values. 
+            """
             return
 
         # Open the file and read in the raw values
